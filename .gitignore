@@ -30,6 +30,16 @@ coverage/
 TestResults/
 appsettings.Development.json
 
+# devenv
+.devenv/
+devenv.local.nix
+devenv.nix
+devenv.yaml
+devenv.lock.json
+
+# DevContainers
+!.devcontainer/
+
 # Python
 __pycache__/
 *.pyc
