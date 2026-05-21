@@ -78,6 +78,77 @@ public class ModelTests
 
     #endregion
 
+    #region RegistryTweak Tests
+
+    [Fact]
+    public void RegistryTweak_ShouldInitializeWithDefaults()
+    {
+        // Arrange & Act
+        var config = new RegistryTweak();
+
+        // Assert
+        Assert.Equal(string.Empty, config.Path);
+        Assert.Equal(string.Empty, config.Name);
+        Assert.NotNull(config.Value);
+        Assert.Equal("string", config.Type);
+    }
+
+    [Fact]
+    public void RegistryTweak_ShouldRoundTrip_JsonSerialization()
+    {
+        // Arrange
+        var original = new RegistryTweak
+        {
+            Path = "HKCU\\Software\\WinHome",
+            Name = "TestValue",
+            Value = 1,
+            Type = "dword"
+        };
+
+        // Act
+        var jsonString = JsonSerializer.Serialize(original);
+        var deserialized = JsonSerializer.Deserialize<RegistryTweak>(jsonString);
+
+        // Assert
+        Assert.NotNull(deserialized);
+        Assert.Equal(original.Path, deserialized.Path);
+        Assert.Equal(original.Name, deserialized.Name);
+        Assert.Equal(original.Type, deserialized.Type);
+
+        var valueElement = Assert.IsType<JsonElement>(deserialized.Value);
+        Assert.Equal(JsonValueKind.Number, valueElement.ValueKind);
+        Assert.Equal(original.Value, valueElement.GetInt32());
+    }
+
+    [Fact]
+    public void RegistryTweak_ShouldRoundTrip_YamlSerialization()
+    {
+        // Arrange
+        var original = new RegistryTweak
+        {
+            Path = "HKLM\\Software\\WinHome",
+            Name = "TestString",
+            Value = "Enabled",
+            Type = "string"
+        };
+
+        var serializer = new SerializerBuilder().Build();
+        var deserializer = new DeserializerBuilder().Build();
+
+        // Act
+        var yamlString = serializer.Serialize(original);
+        var deserialized = deserializer.Deserialize<RegistryTweak>(yamlString);
+
+        // Assert
+        Assert.NotNull(deserialized);
+        Assert.Equal(original.Path, deserialized.Path);
+        Assert.Equal(original.Name, deserialized.Name);
+        Assert.Equal(original.Type, deserialized.Type);
+        Assert.Equal(original.Value, deserialized.Value);
+    }
+
+    #endregion
+
     #region WslDistroConfig Tests
 
     [Fact]
