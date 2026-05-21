@@ -77,6 +77,14 @@ extensions:
           isEnabled: true
 ```
 
+**Example (Oh My Posh Plugin):**
+```yaml
+ohmyposh:
+  profile: "C:\\Users\\test\\Documents\\PowerShell\\Microsoft.PowerShell_profile.ps1"
+  settings:
+    theme: "tokyonight"
+```
+
 ## Apps
 Install applications using supported managers (`winget`, `scoop`, `choco`) or installed plugins.
 
