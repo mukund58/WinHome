@@ -151,7 +151,7 @@ namespace WinHome
             {
                 // Only reconcile runtimes for plugins that are actually used in the config
                 var usedPluginNames = config.Apps.Select(a => a.Manager)
-                    .Concat(new[] { "vim", "vscode", "obsidian" }.Where(_ => config.Vim != null || config.Vscode != null || config.Obsidian != null))
+                    .Concat(new[] { "vim", "vscode", "obsidian", "ohmyposh" }.Where(_ => config.Vim != null || config.Vscode != null || config.Obsidian != null || config.Ohmyposh != null))
                     .Concat(config.Extensions.Keys)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -228,6 +228,7 @@ namespace WinHome
             if (config.Vim != null) allExtensions["vim"] = config.Vim;
             if (config.Vscode != null) allExtensions["vscode"] = config.Vscode;
             if (config.Obsidian != null) allExtensions["obsidian"] = config.Obsidian;
+            if (config.Ohmyposh != null) allExtensions["ohmyposh"] = config.Ohmyposh;
 
             if (allExtensions.Any())
             {

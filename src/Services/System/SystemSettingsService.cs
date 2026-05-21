@@ -1,15 +1,22 @@
 using WinHome.Interfaces;
 using WinHome.Models;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Collections.Generic;
+using System.Runtime.Versioning;
 
 namespace WinHome.Services.System
 {
+    [SupportedOSPlatform("windows")]
     public class SystemSettingsService : ISystemSettingsService
     {
         private readonly IProcessRunner _processRunner;
         private readonly IRegistryService _registryService;
+        private readonly ILogger<SystemSettingsService> _logger;
         private readonly List<string> _nonRegistryKeys = new() { "brightness", "volume", "notification" };
+
+        private const int MinVolumeOrBrightness = 0;
+        private const int MaxVolumeOrBrightness = 100;
 
         private readonly Dictionary<string, List<RegistryTweak>> _securityPresets = new()
         {
@@ -35,13 +42,33 @@ namespace WinHome.Services.System
                 new RegistryTweak { Path = @"HKLM\System\CurrentControlSet\Control\Remote Assistance", Name = "fAllowToGetHelp", Value = 0, Type = "dword" },
                 // Disable NetBIOS over TCP/IP (prevent LLMNR/NBT-NS poisoning)
                 new RegistryTweak { Path = @"HKLM\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces", Name = "NetbiosOptions", Value = 2, Type = "dword" }
+            },
+            ["privacy"] = new()
+            {
+                // Disable Windows Telemetry data collection
+                new RegistryTweak { Path = @"HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection", Name = "AllowTelemetry", Value = 0, Type = "dword" },
+                // Disable Advertising ID for personalized ads
+                new RegistryTweak { Path = @"HKCU\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo", Name = "Enabled", Value = 0, Type = "dword" },
+                // Disable Activity History feed
+                new RegistryTweak { Path = @"HKLM\SOFTWARE\Policies\Microsoft\Windows\System", Name = "EnableActivityFeed", Value = 0, Type = "dword" },
+                // Disable Activity History cloud upload
+                new RegistryTweak { Path = @"HKLM\SOFTWARE\Policies\Microsoft\Windows\System", Name = "UploadUserActivities", Value = 0, Type = "dword" },
+                // Disable Tailored Experiences based on diagnostic data
+                new RegistryTweak { Path = @"HKCU\Software\Microsoft\Windows\CurrentVersion\Privacy", Name = "TailoredExperiencesWithDiagnosticDataEnabled", Value = 0, Type = "dword" },
+                // Disable Feedback Notifications
+                new RegistryTweak { Path = @"HKCU\Software\Microsoft\Siuf\Rules", Name = "NumberOfSIUFInPeriod", Value = 0, Type = "dword" },
+                // Disable implicit text/ink collection for input personalization
+                new RegistryTweak { Path = @"HKCU\Software\Microsoft\InputPersonalization", Name = "RestrictImplicitTextCollection", Value = 1, Type = "dword" },
+                // Disable contact harvesting for handwriting recognition
+                new RegistryTweak { Path = @"HKCU\Software\Microsoft\InputPersonalization\TrainedDataStore", Name = "HarvestContacts", Value = 0, Type = "dword" }
             }
         };
 
-        public SystemSettingsService(IProcessRunner processRunner, IRegistryService registryService)
+        public SystemSettingsService(IProcessRunner processRunner, IRegistryService registryService, ILogger<SystemSettingsService> logger)
         {
             _processRunner = processRunner;
             _registryService = registryService;
+            _logger = logger;
         }
 
         private record SettingDefinition(
@@ -123,7 +150,7 @@ namespace WinHome.Services.System
                 new() { { "true", 1 }, { "false", 0 } }),
         };
 
-        public async Task<IEnumerable<RegistryTweak>> GetTweaksAsync(Dictionary<string, object> settings)
+        public async Task<IEnumerable<RegistryTweak>> GetTweaksAsync(Dictionary<string, object>? settings)
         {
             return await Task.Run(() =>
             {
@@ -188,7 +215,7 @@ namespace WinHome.Services.System
                         if (regValue != null)
                         {
                             // Find corresponding user-friendly key for this value
-                            var match = def.ValueMap.FirstOrDefault(kvp => 
+                            var match = def.ValueMap.FirstOrDefault(kvp =>
                             {
                                 if (kvp.Value is byte[] kvpBytes && regValue is byte[] regBytes)
                                 {
@@ -223,7 +250,7 @@ namespace WinHome.Services.System
             return match?.SettingKey;
         }
 
-        public Task ApplyNonRegistrySettingsAsync(Dictionary<string, object> settings, bool dryRun)
+        public Task ApplyNonRegistrySettingsAsync(Dictionary<string, object>? settings, bool dryRun)
         {
             if (settings == null) return Task.CompletedTask;
 
@@ -233,17 +260,35 @@ namespace WinHome.Services.System
                 switch (key)
                 {
                     case "brightness":
-                        if (int.TryParse(userSetting.Value.ToString(), out int brightness))
+                        if (userSetting.Value?.ToString() is string brightnessVal && int.TryParse(brightnessVal, out int brightness))
                         {
+                            if (brightness < MinVolumeOrBrightness || brightness > MaxVolumeOrBrightness)
+                            {
+                                _logger.LogWarning($"[Settings] Brightness value '{brightness}' is out of range. Must be between {MinVolumeOrBrightness} and {MaxVolumeOrBrightness}. Skipping.");
+                                break;
+                            }
                             string command = $"(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1, {brightness})";
                             _processRunner.RunCommand("powershell", $"-Command \"{command}\"", dryRun);
                         }
+                        else if (userSetting.Value != null)
+                        {
+                            _logger.LogWarning($"[Settings] Brightness value '{userSetting.Value}' is not a valid integer. Skipping.");
+                        }
                         break;
                     case "volume":
-                        if (int.TryParse(userSetting.Value.ToString(), out int volume))
+                        if (userSetting.Value?.ToString() is string volumeVal && int.TryParse(volumeVal, out int volume))
                         {
+                            if (volume < MinVolumeOrBrightness || volume > MaxVolumeOrBrightness)
+                            {
+                                _logger.LogWarning($"[Settings] Volume value '{volume}' is out of range. Must be between {MinVolumeOrBrightness} and {MaxVolumeOrBrightness}. Skipping.");
+                                break;
+                            }
                             string command = $"Set-AudioDevice -PlaybackVolume {volume}";
                             _processRunner.RunCommand("powershell", $"-Command \"{command}\"", dryRun);
+                        }
+                        else if (userSetting.Value != null)
+                        {
+                            _logger.LogWarning($"[Settings] Volume value '{userSetting.Value}' is not a valid integer. Skipping.");
                         }
                         break;
                     case "notification":
