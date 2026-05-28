@@ -409,6 +409,36 @@ public class CliBuilderTests
     Assert.Equal(LogLevel.Trace, capturedLevel);
   }
 
+  [Theory]
+  [InlineData("backup", "backup.json")]
+  [InlineData("restore", "restore.json")]
+  public async Task StateCommand_BindsPathArgument(string subcommand, string expectedPath)
+  {
+    // Arrange
+    string? capturedCommand = null;
+    string? capturedPath = null;
+    LogLevel capturedLevel = LogLevel.Trace;
+
+    var root = BuildRootCommand(
+      runAction: NoOpRunAction(),
+      stateAction: (command, path, level) =>
+      {
+        capturedCommand = command;
+        capturedPath = path;
+        capturedLevel = level;
+        return Task.FromResult(0);
+      });
+
+    // Act
+    var exitCode = await root.Parse(new[] { "state", subcommand, expectedPath }).InvokeAsync();
+
+    // Assert
+    Assert.Equal(0, exitCode);
+    Assert.Equal(subcommand, capturedCommand);
+    Assert.Equal(expectedPath, capturedPath);
+    Assert.Equal(LogLevel.Info, capturedLevel);
+  }
+
   [Fact]
   public async Task CompletionCommand_KnownShell_ReturnsZero()
   {
