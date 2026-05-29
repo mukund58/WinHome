@@ -8,12 +8,12 @@ namespace WinHome.Infrastructure;
 
 public class AppRunner
 {
-  private readonly Engine _engine;
+  private readonly IEngine _engine;
   private readonly IConfigValidator _validator;
   private readonly ISecretResolver _secretResolver;
   private readonly ILogger _logger;
 
-  public AppRunner(Engine engine, IConfigValidator validator, ISecretResolver secretResolver, ILogger logger)
+  public AppRunner(IEngine engine, IConfigValidator validator, ISecretResolver secretResolver, ILogger logger)
   {
     _engine = engine;
     _validator = validator;

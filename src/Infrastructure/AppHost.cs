@@ -123,8 +123,9 @@ public static class AppHost
         sp.GetRequiredService<IRuntimeResolver>(),
         sp.GetRequiredService<StateWriter>()
     ));
+    services.AddSingleton<IEngine>(sp => sp.GetRequiredService<Engine>());
     services.AddSingleton<AppRunner>(sp => new AppRunner(
-        sp.GetRequiredService<Engine>(),
+        sp.GetRequiredService<IEngine>(),
         sp.GetRequiredService<IConfigValidator>(),
         sp.GetRequiredService<ISecretResolver>(),
         sp.GetRequiredService<ILogger>()
