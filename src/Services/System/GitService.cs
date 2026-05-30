@@ -16,7 +16,7 @@ namespace WinHome.Services.System
 
     private string GetGitExecutable()
     {
-      if (_processRunner.RunCommand("git", "--version", false)) return "git";
+      if (_processRunner.RunCommand("git", new[] { "--version" }, false)) return "git";
 
       string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
       string programData = Environment.GetEnvironmentVariable("ProgramData") ?? @"C:\ProgramData";
@@ -85,18 +85,18 @@ namespace WinHome.Services.System
       }
 
       _logger.LogInfo($"[Git] Setting {key} = {value}...");
-      _processRunner.RunCommand(gitExec, $"config --global {key} \"{value}\"", false);
+      _processRunner.RunCommand(gitExec, new[] { "config", "--global", key, value }, false);
     }
 
     private string GetGlobalConfig(string gitExec, string key)
     {
-      string output = _processRunner.RunCommandWithOutput(gitExec, $"config --global --get {key}");
+      string output = _processRunner.RunCommandWithOutput(gitExec, new[] { "config", "--global", "--get", key });
       return output.Trim();
     }
 
     public bool IsInstalled()
     {
-      if (_processRunner.RunCommand("git", "--version", false)) return true;
+      if (_processRunner.RunCommand("git", new[] { "--version" }, false)) return true;
 
       string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
       string programData = Environment.GetEnvironmentVariable("ProgramData") ?? @"C:\ProgramData";

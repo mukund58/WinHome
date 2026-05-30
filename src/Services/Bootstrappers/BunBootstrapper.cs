@@ -15,7 +15,7 @@ namespace WinHome.Services.Bootstrappers
 
     public bool IsInstalled()
     {
-      return _processRunner.RunCommand("bun", "--version", false);
+      return _processRunner.RunCommand("bun", new[] { "--version" }, false);
     }
 
     public void Install(bool dryRun)

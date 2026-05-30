@@ -48,8 +48,7 @@ namespace WinHome.Services.System
     {
       _logger.LogInformation($"{(dryRun ? "[Dry Run] " : "")}Setting startup type of service '{serviceName}' to '{startupType}'");
       // sc.exe config "serviceName" start= auto/demand/disabled
-      var args = $"config \"{serviceName}\" start= {startupType}";
-      if (!_processRunner.RunCommand("sc.exe", args, dryRun))
+      if (!_processRunner.RunCommand("sc.exe", new[] { "config", serviceName, "start=", startupType }, dryRun))
       {
         _logger.LogError($"Failed to set startup type for service '{serviceName}'.");
       }

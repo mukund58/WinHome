@@ -5,12 +5,12 @@
 # ]
 # ///
 
-import os
-import sys
-import json
-import shutil
-import tempfile
 import copy
+import json
+import os
+import shutil
+import sys
+import tempfile
 import uuid
 
 try:
@@ -25,7 +25,7 @@ def deep_merge(dict1, dict2):
     """
     merged = copy.deepcopy(dict1)
     changed = False
-    
+
     for key, value in dict2.items():
         if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
             # Recurse
@@ -37,7 +37,7 @@ def deep_merge(dict1, dict2):
             if key not in merged or merged[key] != value:
                 merged[key] = copy.deepcopy(value)
                 changed = True
-                
+
     return merged, changed
 
 def get_config_path():
@@ -52,7 +52,7 @@ def check_installed(args, request_id):
     # On linux/mac for testing it might be 'lazydocker'
     if not installed:
         installed = shutil.which("lazydocker") is not None
-        
+
     return {
         "requestId": request_id,
         "success": True,
@@ -69,10 +69,10 @@ def apply_config(args, context, request_id):
             "changed": False,
             "data": None
         }
-        
+
     config_path = get_config_path()
     dry_run = context.get("dryRun", False)
-    
+
     # Read existing config
     existing_config = {}
     if os.path.exists(config_path):
@@ -82,18 +82,21 @@ def apply_config(args, context, request_id):
                 if isinstance(parsed, dict):
                     existing_config = parsed
         except Exception as e:
-            sys.stderr.write(f"[lazydocker-plugin] Warning: Failed to parse existing config ({str(e)}). Backing up and starting fresh.\n")
-            
+            sys.stderr.write(
+                "[lazydocker-plugin] Warning: Failed to parse "
+                f"existing config ({str(e)}). Backing up and starting fresh.\n"
+            )
+
             # Backup corrupted config
             backup_path = f"{config_path}.{uuid.uuid4().hex[:8]}.bak"
             try:
                 shutil.copy2(config_path, backup_path)
             except Exception as backup_e:
                 sys.stderr.write(f"[lazydocker-plugin] Warning: Failed to create backup: {str(backup_e)}\n")
-    
+
     # Deep merge
     merged_config, changed = deep_merge(existing_config, settings)
-    
+
     if not changed:
         return {
             "requestId": request_id,
@@ -101,13 +104,13 @@ def apply_config(args, context, request_id):
             "changed": False,
             "data": None
         }
-        
+
     if not dry_run:
         try:
             config_dir = os.path.dirname(config_path)
             if not os.path.exists(config_dir):
                 os.makedirs(config_dir, mode=0o700, exist_ok=True)
-                
+
             fd, temp_path = tempfile.mkstemp(
                 prefix="lazydocker-", suffix=".tmp",
                 dir=os.path.dirname(config_path)
@@ -130,7 +133,7 @@ def apply_config(args, context, request_id):
             }
     else:
         sys.stderr.write(f"[lazydocker-plugin] Would update {config_path} with new merged config\n")
-        
+
     return {
         "requestId": request_id,
         "success": True,
@@ -151,13 +154,13 @@ def main():
             }))
             sys.stdout.flush()
             return
-            
+
         request = json.loads(raw_input)
         command = request.get("command")
         args = request.get("args", {})
         context = request.get("context", {})
         request_id = request.get("requestId", "unknown")
-        
+
         try:
             if command == "check_installed":
                 response = check_installed(args, request_id)
@@ -180,7 +183,7 @@ def main():
                 "data": None,
                 "error": f"Internal Script Error: {str(inner_e)}"
             }
-            
+
         print(json.dumps(response))
         sys.stdout.flush()
     except Exception as e:

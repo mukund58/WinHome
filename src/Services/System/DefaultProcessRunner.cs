@@ -134,6 +134,24 @@ namespace WinHome.Services.System
       return RunProcessWithOutputInternal(startInfo, standardInput);
     }
 
+    public string RunCommandWithOutput(string fileName, IEnumerable<string> args, string? standardInput)
+    {
+      var startInfo = new ProcessStartInfo
+      {
+        FileName = fileName,
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        RedirectStandardInput = standardInput != null,
+        UseShellExecute = false,
+        CreateNoWindow = true
+      };
+      foreach (var arg in args)
+      {
+        startInfo.ArgumentList.Add(arg);
+      }
+      return RunProcessWithOutputInternal(startInfo, standardInput);
+    }
+
     private string RunProcessWithOutputInternal(ProcessStartInfo startInfo, string? standardInput)
     {
 

@@ -4,15 +4,15 @@
 # ]
 # ///
 
+import copy
 import json
 import os
 import shutil
-import tempfile
 import sys
-import copy
+import tempfile
 import uuid
-import yaml
 
+import yaml
 
 PLUGIN_NAME = "yasb"
 
@@ -133,7 +133,7 @@ def apply_config(request_id: str, args: dict, context: dict) -> dict:
 
     config_path = get_config_path()
     current_config = read_yaml(config_path)
-    
+
     # Securely create a deep copy to evaluate alterations cleanly
     updated_config = copy.deepcopy(current_config)
     changed = merge_settings(updated_config, settings)

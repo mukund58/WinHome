@@ -71,7 +71,7 @@ namespace WinHome.Services.System
     {
       try
       {
-        var output = _processRunner.RunCommandWithOutput("where.exe", runtimeName);
+        var output = _processRunner.RunCommandWithOutput("where.exe", new[] { runtimeName });
         if (string.IsNullOrWhiteSpace(output)) return string.Empty;
 
         string fullPath = string.Empty;

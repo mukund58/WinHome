@@ -3,7 +3,6 @@ import os
 import sys
 import tempfile
 
-
 SETTINGS_PATH = os.path.expandvars(
     r"%APPDATA%\BetterDiscord\data\settings.json"
 )

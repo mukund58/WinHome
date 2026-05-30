@@ -56,20 +56,20 @@ namespace WinHome.Services.System
         {
           // export to temp file
           // winget export -o <file> --source winget --accept-source-agreements
-          bool success = _processRunner.RunCommand("winget", $"export -o \"{tempFile}\" --source winget --accept-source-agreements", false);
+          bool success = _processRunner.RunCommand("winget", new[] { "export", "-o", tempFile, "--source", "winget", "--accept-source-agreements" }, false);
 
           if (success && File.Exists(tempFile))
           {
             string json = File.ReadAllText(tempFile);
             apps = ParseWingetExport(json);
           }
-          string scoopOutput = _processRunner.RunCommandWithOutput("scoop", "list");
+          string scoopOutput = _processRunner.RunCommandWithOutput("scoop", new[] { "list" });
           if (!string.IsNullOrWhiteSpace(scoopOutput))
           {
             apps.AddRange(ParseScoopList(scoopOutput));
           }
 
-          string chocoOutput = _processRunner.RunCommandWithOutput("choco", "list --local-only");
+          string chocoOutput = _processRunner.RunCommandWithOutput("choco", new[] { "list", "--local-only" });
           if (!string.IsNullOrWhiteSpace(chocoOutput))
           {
             apps.AddRange(ParseChocolateyList(chocoOutput));

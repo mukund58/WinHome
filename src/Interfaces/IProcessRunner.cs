@@ -19,6 +19,8 @@ namespace WinHome.Interfaces
     [Obsolete("Use the IEnumerable<string> overload instead to prevent command injection.")]
     string RunCommandWithOutput(string fileName, string args, string? standardInput);
 
+    string RunCommandWithOutput(string fileName, IEnumerable<string> args, string? standardInput);
+
     [Obsolete("Use the IEnumerable<string> overload instead to prevent command injection.")]
     string RunAndCapture(string fileName, string arguments);
 

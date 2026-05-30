@@ -161,7 +161,7 @@ namespace WinHome.Services.Bootstrappers
       // Use Add-AppxPackage via PowerShell
       string command = $"Add-AppxPackage -Path \"{path}\"";
       string output = "";
-      if (!_processRunner.RunCommand("powershell.exe", $"-NoProfile -NonInteractive -Command \"{command}\"", false, line => output += line + "\n"))
+      if (!_processRunner.RunCommand("powershell.exe", new[] { "-NoProfile", "-NonInteractive", "-Command", command }, false, line => output += line + "\n"))
       {
         _logger.LogWarning($"[Bootstrapper] Warning: Package {Path.GetFileName(path)} failed to install.");
         if (!string.IsNullOrWhiteSpace(output))

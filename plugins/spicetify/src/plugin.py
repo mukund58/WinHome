@@ -6,7 +6,6 @@ import sys
 import tempfile
 import uuid
 
-
 CONFIG_DIR = ".spicetify"
 CONFIG_FILE = "config.ini"
 

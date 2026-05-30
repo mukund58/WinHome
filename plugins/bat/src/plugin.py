@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-
 MANAGED_PREFIX = "--"
 
 
@@ -127,9 +126,7 @@ def parse_config(text: str) -> Tuple[List[ConfigLine], bool]:
     # This parser is line-based and should be resilient.
     # Mark corrupted only for situations we truly cannot proceed with.
     try:
-        lines: List[ConfigLine] = [parse_line(l.rstrip("\n")) for l in text.splitlines(True)]
         # Re-parse with correct raw retention: splitlines(True) keeps newlines.
-        # We'll adjust ConfigLine.raw below.
         fixed: List[ConfigLine] = []
         for original in text.splitlines(True):
             # Keep original raw including newline.
@@ -160,8 +157,6 @@ def build_setting_line(key: str, value: Any) -> str:
 
 
 def merge_settings(lines: List[ConfigLine], settings: Dict[str, Any]) -> Tuple[List[ConfigLine], bool]:
-    managed_keys = set(settings.keys())
-
     # Normalize incoming keys to ensure they start with --
     normalized: Dict[str, Any] = {}
     for k, v in settings.items():

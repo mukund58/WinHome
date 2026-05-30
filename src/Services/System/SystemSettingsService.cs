@@ -379,7 +379,7 @@ namespace WinHome.Services.System
               _logger.LogWarning("Brightness value '{Value}' is out of range (0-100).", brightness);
               break;
             }
-            _processRunner.RunCommand("powershell", $"-Command \"(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1, {brightness})\"", dryRun);
+            _processRunner.RunCommand("powershell", new[] { "-Command", $"(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1, {brightness})" }, dryRun);
             break;
 
           case "volume":
@@ -395,7 +395,7 @@ namespace WinHome.Services.System
               break;
             }
             string volCommand = $@"$vol = [Math]::Round({volume} / 100.0, 2); (New-Object -ComObject MMDeviceEnumerator).GetDefaultAudioEndpoint(0,1).AudioEndpointVolume.MasterVolumeLevelScalar = $vol";
-            _processRunner.RunCommand("powershell", $"-Command \"{volCommand}\"", dryRun);
+            _processRunner.RunCommand("powershell", new[] { "-Command", volCommand }, dryRun);
             break;
           case "notification":
             if (userSetting.Value is Dictionary<object, object> notificationConfig)
@@ -403,7 +403,7 @@ namespace WinHome.Services.System
               var title = notificationConfig.GetValueOrDefault((object)"title")?.ToString() ?? "";
               var message = notificationConfig.GetValueOrDefault((object)"message")?.ToString() ?? "";
               string command = $"New-BurntToastNotification -Text '{title}', '{message}'";
-              _processRunner.RunCommand("powershell", $"-Command \"{command}\"", dryRun);
+              _processRunner.RunCommand("powershell", new[] { "-Command", command }, dryRun);
             }
             break;
           case "screen_timeout_ac":
@@ -433,7 +433,7 @@ namespace WinHome.Services.System
           _logger.LogWarning($"[Settings] Power setting value '{minutes}' cannot be negative. Skipping.");
           return;
         }
-        _processRunner.RunCommand("powercfg", $"/change {powercfgArg} {minutes}", dryRun);
+        _processRunner.RunCommand("powercfg", new[] { "/change", powercfgArg, minutes.ToString() }, dryRun);
       }
       else if (value != null)
       {
